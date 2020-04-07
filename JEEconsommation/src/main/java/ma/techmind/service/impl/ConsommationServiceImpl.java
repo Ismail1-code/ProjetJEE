@@ -2,111 +2,86 @@ package ma.techmind.service.impl;
 
 
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ma.techmind.bean.Consommation;
-import ma.techmind.bean.ImportShed;
-import ma.techmind.bean.Medicament;
-import ma.techmind.bean.Nourriture;
-import ma.techmind.bean.StockMedicament;
-import ma.techmind.bean.StockNourriture;
 import ma.techmind.dao.ConsommationDao;
 import ma.techmind.service.ConsommationService;
 
-@Service
+
+@Service 
 public class ConsommationServiceImpl implements ConsommationService {
 	@Autowired
 	private ConsommationDao consommationDao ;
 
 	@Override
-	public Consommation findByMedicament(Medicament medicamment) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByMedicament(medicamment);
-	}
-	
-	@Override
-	public List<Consommation> findByImportEmp(ImportShed importEmp) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByImportEmp(importEmp);
-	}
-	@Override
-	public Consommation findByNourriture(Nourriture nourriture) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByNourriture(nourriture);
-	}
-
-	@Override
-	public Consommation findByStockMedicamment(StockMedicament stockMedicamment) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByStockMedicamment(stockMedicamment);
-	}
-
-	@Override
-	public Consommation findByStockNourriture(StockNourriture stockNourriture) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByStockNourriture(stockNourriture);
-	}
-
-	@Override
 	public int save(Consommation consommation) {
-		// TODO Auto-generated method stub
-		Consommation foundedconsommation = consommationDao.findByRef(consommation.getRef());
-		if (foundedconsommation==null) return -1;
-		else {
-		 consommationDao.save(consommation);
-		 return 1;}
+        Consommation foundedConsommation  = findByRef(consommation.getRef());
+        if(foundedConsommation!=null)
+        	return -1;
+        else {
+        	
+        	consommationDao.save(consommation);
+        	return 1;
+        }
+        	
 	}
 
 	@Override
 	public List<Consommation> findAll() {
-		// TODO Auto-generated method stub
-		return  consommationDao.findAll();
+		
+		return consommationDao.findAll(Sort.by(Sort.Direction.DESC, "date"));
+
 	}
 
 	@Override
 	public Consommation findByRef(String ref) {
-		// TODO Auto-generated method stub
-		return consommationDao.findByRef(ref);		
+		return this.consommationDao.findByRef(ref);
 	}
-	
-	
+
 	@Override
-	public double totConsommeParJour(String ref) {
-		double tot ;
-		Consommation consommation = findByRef(ref);
-		tot = consommation.getMedicament().getPrixUni()*consommation.getQteMedicamment()+consommation.getNourriture().getPrixUni()*consommation.getQteNourriture();
-	return 	tot;
+	public List<Consommation> findByDate(Date d) {
+		return consommationDao.findByDateOrderByDateDesc(d);
 	}
-	
+
 	@Override
-	public double totConsommeParImportEmp(ImportShed importEmp) {
-		double sommeConsommation =0;
-		List<Consommation> listconsommation =findByImportEmp(importEmp);
-		for (Consommation c : listconsommation) {
-			sommeConsommation += totConsommeParJour(c.getRef());	
-		}
-		return sommeConsommation;
+	public List<Consommation> findByImportEmp(String importEmp) {
+		return consommationDao.findByImportEmpOrderByDateDesc(importEmp);
 	}
-	
+
 	@Override
-	public double qteNourritureConsommeParJour (String ref) {
-		Consommation consommation = findByRef(ref);
-		double totNourritureConsomme;
-		totNourritureConsomme=consommation.getQteNourriture()-consommation.getQteRestNourriture();
-		return totNourritureConsomme;
+	@Transactional
+	public int deleteByRef(String ref) {
+		  Consommation foundedConsommation  = findByRef(ref);
+	        if(foundedConsommation==null)
+	        	return -1;
+	        else {
+	        	consommationDao.deleteById(foundedConsommation.getId());
+	        	return 1;
+	        }
 	}
-	
+
 	@Override
-	public double qteMedicammentConsommeParJour (String ref) {
-		Consommation consommation = findByRef(ref);
-		double totMedicammentConsomme;
-		totMedicammentConsomme=consommation.getQteMedicamment()-consommation.getQteRestmMedicamment();
-		return totMedicammentConsomme;
+	public int updateConsommation(Consommation c) {
+		 Consommation foundedConsommation  = findByRef(c.getRef());
+        if(foundedConsommation==null)
+        	return -1;
+        else {
+        	foundedConsommation.setQteRestMedicamment(c.getQteRestmMedicamment());
+        	foundedConsommation.setQteRestNourriture(c.getQteRestNourriture());
+        	consommationDao.save(foundedConsommation);
+        	return 1;
+        }
 	}
+
 	
+
 	
 	
 }
